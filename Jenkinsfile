@@ -17,8 +17,6 @@ pipeline {
 
         stage('Build with Maven') {
             steps {
-                // Change to the appropriate directory
-                dir('docker-spring-boot') {
                     // Run Maven build
                     sh 'mvn clean package'
                 }
@@ -27,8 +25,6 @@ pipeline {
 
         stage('Build Docker Image') {
             steps {
-                // Change to the appropriate directory
-                dir('docker-spring-boot') {
                     // Build Docker image
                     sh "docker build -t $DOCKER_IMAGE ."
                 }
