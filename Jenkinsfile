@@ -11,7 +11,7 @@ pipeline {
         stage('Checkout') {
             steps {
                 // Checkout code from GitHub
-                git branch: 'master', url: 'https://github.com/mkyong/docker-java.git'
+                git branch: 'master', url: 'https://github.com/manjuntha1963/springboot.git'
             }
         }
 
