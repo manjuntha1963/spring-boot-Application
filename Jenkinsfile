@@ -3,7 +3,7 @@ pipeline {
 
     environment {
         DOCKER_IMAGE = 'manjuntha1963/my-java-app' // Full Docker image name
-        EC2_HOST = '54.90.128.32'               // Replace with your EC2 instance's public IP
+        EC2_HOST = '54.234.97.114'               // Replace with your EC2 instance's public IP
         EC2_USER = 'ubuntu'                     // EC2 username (e.g., 'ubuntu' for Ubuntu)
         BRANCH = 'master'                       // Configurable branch
     }
