@@ -12,7 +12,7 @@ public class StartApplication {
 
     @GetMapping("/")
     public String index(final Model model) {
-        model.addAttribute("title", "AWS Devops Training + Spring Boot -CI-CD");
+        model.addAttribute("title", "AWS Devops Training + Spring Boot  + CI-CD Project");
         model.addAttribute("msg", "Welcome to the docker container!");
         return "index";
     }
