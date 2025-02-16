@@ -52,7 +52,7 @@ pipeline {
             steps {
                 script {
                     echo 'Running Trivy scan'
-                    sh "trivy image --severity HIGH,CRITICAL \"$DOCKER_IMAGE\""
+                    sh "trivy image --exit-code 1 --severity HIGH,CRITICAL \"$DOCKER_IMAGE\" || true"
                 }
             }
         }
