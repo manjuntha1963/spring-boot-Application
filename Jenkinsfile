@@ -8,7 +8,6 @@ pipeline {
         DEPLOYMENT_NAME = 'my-java-app'             // Kubernetes Deployment Name
         GITHUB_REPO = "https://github.com/manjuntha1963/spring-boot-Application.git"
         SONARQUBE_SERVER = 'sonarqube'              // Jenkins SonarQube Server Name
-        RECIPIENTS = 'manjuntha1963@gmail.com'       // Email recipient
     }
 
     stages {
@@ -51,11 +50,8 @@ pipeline {
         stage('Trivy Security Scan') {
             steps {
                 script {
-                    echo 'Running Trivy scan '
-                    sh '''
-                    # Run Trivy scan
-                    trivy image --severity HIGH,CRITICAL $DOCKER_IMAGE
-                    '''
+                    echo 'Running Trivy scan'
+                    sh 'trivy image --severity HIGH,CRITICAL $DOCKER_IMAGE'
                 }
             }
         }
@@ -93,26 +89,43 @@ pipeline {
                 }
             }
         }
+
+        stage('Deploy Prometheus and Grafana with LoadBalancer') {
+            steps {
+                script {
+                    echo 'Deploying Prometheus and Grafana monitoring to EKS with LoadBalancer...'
+                    sh """
+                    # Set Kubernetes context
+                    export KUBECONFIG=$KUBECONFIG
+
+                    # Add Helm repository for Prometheus and Grafana
+                    helm repo add prometheus-community https://prometheus-community.github.io/helm-charts
+                    helm repo update
+
+                    # Install Prometheus & Grafana with LoadBalancer
+                    helm upgrade --install prometheus prometheus-community/kube-prometheus-stack \
+                        --namespace monitoring --create-namespace \
+                        --set grafana.service.type=LoadBalancer \
+                        --set prometheus.service.type=LoadBalancer
+
+                    # Wait for pods to be ready
+                    kubectl get pods -n monitoring
+
+                    # Get the LoadBalancer IPs
+                    kubectl get svc -n monitoring | grep grafana
+                    kubectl get svc -n monitoring | grep prometheus
+                    """
+                }
+            }
+        }
     }
 
     post {
         success {
-            echo '✅ Deployment to EKS successful!'
-            emailext (
-                subject: "Jenkins Pipeline Success: $JOB_NAME #$BUILD_NUMBER",
-                body: "The pipeline for $JOB_NAME completed successfully.\n\nCheck the build logs: ${BUILD_URL}",
-                recipientProviders: [[$class: 'DevelopersRecipientProvider']],
-                to: RECIPIENTS
-            )
+            echo '✅ Deployment to EKS and monitoring setup successful!'
         }
         failure {
             echo '❌ Build or Deployment failed!'
-            emailext (
-                subject: "Jenkins Pipeline Failed: $JOB_NAME #$BUILD_NUMBER",
-                body: "The pipeline for $JOB_NAME has failed.\n\nCheck the build logs: ${BUILD_URL}",
-                recipientProviders: [[$class: 'DevelopersRecipientProvider']],
-                to: RECIPIENTS
-            )
         }
     }
 }
