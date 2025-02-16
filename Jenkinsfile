@@ -4,7 +4,7 @@ pipeline {
     environment {
         DOCKER_IMAGE = 'manjuntha1963/my-java-app' // Docker Hub Image
         BRANCH = 'master'                          // GitHub Branch
-        KUBECONFIG = '/home/jenkins/.kube/config'   // Path to kubeconfig
+        KUBECONFIG = '/var/lib/jenkins/.kube/config'   // Path to kubeconfig
         DEPLOYMENT_NAME = 'my-java-app'            // Kubernetes Deployment Name
         GITHUB_REPO = "https://github.com/manjuntha1963/spring-boot-Application.git"
     }
