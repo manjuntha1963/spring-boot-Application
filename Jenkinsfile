@@ -2,7 +2,8 @@ pipeline {
     agent any
 
     environment {
-        DOCKER_IMAGE = 'manjuntha1963/my-java-app'  // Docker Hub Image
+        DOCKER_IMAGE = "manjuntha1963/my-java-app:${BUILD_NUMBER}"
+        LATEST_IMAGE = "manjuntha1963/my-java-app:latest"
         BRANCH = 'master'                           // GitHub Branch
         KUBECONFIG = '/var/lib/jenkins/.kube/config' // Path to kubeconfig
         DEPLOYMENT_NAME = 'my-java-app'             // Kubernetes Deployment Name
@@ -42,7 +43,7 @@ pipeline {
             steps {
                 script {
                     echo 'Building Docker image...'
-                    sh "docker build -t $DOCKER_IMAGE ."
+                    sh "docker build -t $DOCKER_IMAGE -t $LATEST_IMAGE ."
                 }
             }
         }
