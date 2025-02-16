@@ -47,6 +47,24 @@ pipeline {
             }
         }
 
+        stage('Trivy Security Scan') {
+            steps {
+                script {
+                    echo 'Running Trivy security scan on Docker image...'
+                    sh '''
+                    # Install Trivy if not installed
+                    if ! command -v trivy &> /dev/null; then
+                        echo "Installing Trivy..."
+                        curl -sfL https://raw.githubusercontent.com/aquasecurity/trivy/main/contrib/install.sh | sh
+                    fi
+
+                    # Run Trivy scan
+                    trivy image --exit-code 1 --severity HIGH,CRITICAL $DOCKER_IMAGE
+                    '''
+                }
+            }
+        }
+
         stage('Push Docker Image to Docker Hub') {
             steps {
                 script {
