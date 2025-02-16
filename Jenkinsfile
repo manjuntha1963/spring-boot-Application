@@ -12,8 +12,8 @@ pipeline {
     stages {
         stage('Checkout') {
             steps {
-                // Clone GitHub repository
-                git branch: BRANCH, url: 'https://github.com/manjuntha1963/spring-boot-Application.git'
+                echo 'Cloning GitHub repository...'
+                git branch: BRANCH, url: GITHUB_REPO
             }
         }
 
@@ -54,16 +54,28 @@ pipeline {
                     # Set Kubernetes context
                     export KUBECONFIG=$KUBECONFIG
 
-                    # Apply Kubernetes manifests from GitHub repo
+                    # Ensure kubectl is working
+                    kubectl cluster-info
+                    
+                    # Apply Kubernetes manifests
                     kubectl apply -f k8s/deployment.yaml
                     kubectl apply -f k8s/service.yaml
-                    """
 
-            
+                    # Verify deployment
+                    kubectl get pods -o wide
+                    kubectl get svc my-java-app-service -o wide
+                    """
                 }
             }
         }
     }
-}
+
+    post {
+        success {
+            echo '✅ Deployment to EKS successful!'
+        }
+        failure {
+            echo '❌ Build or Deployment failed!'
+        }
     }
 }
