@@ -52,7 +52,7 @@ pipeline {
                     echo 'Deploying to Kubernetes EKS...'
                     sh """
                     # Set Kubernetes context
-                    export KUBECONFIG=$KUBECONFIG
+                    sudo export KUBECONFIG=$KUBECONFIG
 
                     # Ensure kubectl is working
                     kubectl cluster-info
