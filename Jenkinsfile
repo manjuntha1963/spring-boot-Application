@@ -15,7 +15,7 @@ pipeline {
         stage('Checkout') {
             steps {
                 echo 'Cloning GitHub repository...'
-                git branch: BRANCH, url: GITHUB_REPO
+                git branch: "${BRANCH}", url: "${GITHUB_REPO}"
             }
         }
 
@@ -52,7 +52,7 @@ pipeline {
             steps {
                 script {
                     echo 'Running Trivy scan'
-                    sh 'trivy image --severity HIGH,CRITICAL $DOCKER_IMAGE'
+                    sh "trivy image --severity HIGH,CRITICAL \"$DOCKER_IMAGE\""
                 }
             }
         }
@@ -63,6 +63,7 @@ pipeline {
                     echo 'Pushing Docker image to Docker Hub...'
                     docker.withRegistry('', 'docker-hub-credentials') {
                         sh "docker push $DOCKER_IMAGE"
+                        sh "docker push $LATEST_IMAGE"
                     }
                 }
             }
@@ -73,19 +74,24 @@ pipeline {
                 script {
                     echo 'Deploying to Kubernetes EKS...'
                     sh """
-                    # Set Kubernetes context
                     export KUBECONFIG=$KUBECONFIG
-
-                    # Ensure kubectl is working
                     kubectl cluster-info
-                    
-                    # Apply Kubernetes manifests
                     kubectl apply -f k8s/deployment.yaml
                     kubectl apply -f k8s/service.yaml
-                    
-                    # Verify deployment
                     kubectl get pods -o wide
                     kubectl get svc my-java-app-service -o wide
+                    """
+                }
+            }
+        }
+
+        stage('Force Kubernetes Redeployment') {
+            steps {
+                script {
+                    echo 'Forcing Kubernetes to redeploy...'
+                    sh """
+                    export KUBECONFIG=$KUBECONFIG
+                    kubectl set image deployment/${DEPLOYMENT_NAME} my-java-app=${LATEST_IMAGE} --record
                     """
                 }
             }
@@ -96,23 +102,14 @@ pipeline {
                 script {
                     echo 'Deploying Prometheus and Grafana monitoring to EKS with LoadBalancer...'
                     sh """
-                    # Set Kubernetes context
                     export KUBECONFIG=$KUBECONFIG
-
-                    # Add Helm repository for Prometheus and Grafana
                     helm repo add prometheus-community https://prometheus-community.github.io/helm-charts
                     helm repo update
-
-                    # Install Prometheus & Grafana with LoadBalancer
                     helm upgrade --install prometheus prometheus-community/kube-prometheus-stack \
                         --namespace monitoring --create-namespace \
                         --set grafana.service.type=LoadBalancer \
-                        --set prometheus.service.type=LoadBalancer
-
-                    # Wait for pods to be ready
+                        --set prometheus.service.type=LoadBalancer --wait
                     kubectl get pods -n monitoring
-
-                    # Get the LoadBalancer IPs
                     kubectl get svc -n monitoring | grep grafana
                     kubectl get svc -n monitoring | grep prometheus
                     """
@@ -127,6 +124,10 @@ pipeline {
         }
         failure {
             echo '❌ Build or Deployment failed!'
+        }
+        cleanup {
+            echo '🧹 Cleaning up workspace and Docker images...'
+            sh "docker image prune -f"
         }
     }
 }
