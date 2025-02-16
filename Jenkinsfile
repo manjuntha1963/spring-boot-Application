@@ -84,7 +84,7 @@ pipeline {
                 }
             }
         }
-
+        /*
         stage('Force Kubernetes Redeployment') {
             steps {
                 script {
@@ -96,7 +96,7 @@ pipeline {
                 }
             }
         }
-
+        /*
         stage('Deploy Prometheus and Grafana with LoadBalancer') {
             steps {
                 script {
