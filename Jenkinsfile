@@ -2,11 +2,12 @@ pipeline {
     agent any
 
     environment {
-        DOCKER_IMAGE = 'manjuntha1963/my-java-app' // Docker Hub Image
-        BRANCH = 'master'                          // GitHub Branch
-        KUBECONFIG = '/var/lib/jenkins/.kube/config'   // Path to kubeconfig
-        DEPLOYMENT_NAME = 'my-java-app'            // Kubernetes Deployment Name
+        DOCKER_IMAGE = 'manjuntha1963/my-java-app'  // Docker Hub Image
+        BRANCH = 'master'                           // GitHub Branch
+        KUBECONFIG = '/var/lib/jenkins/.kube/config' // Path to kubeconfig
+        DEPLOYMENT_NAME = 'my-java-app'             // Kubernetes Deployment Name
         GITHUB_REPO = "https://github.com/manjuntha1963/spring-boot-Application.git"
+        SONARQUBE_SERVER = 'sonarqube'              // Jenkins SonarQube Server Name
     }
 
     stages {
@@ -22,6 +23,27 @@ pipeline {
                 script {
                     echo 'Running Maven build...'
                     sh 'mvn clean package'
+                }
+            }
+        }
+
+        stage('SonarQube Analysis') {
+            steps {
+                script {
+                    echo 'Running SonarQube analysis...'
+                    withSonarQubeEnv(SONARQUBE_SERVER) {
+                        sh 'mvn sonar:sonar -Dsonar.projectKey=my-java-app -Dsonar.host.url=http://54.165.163.214:9000'
+                    }
+                }
+            }
+        }
+
+        stage('Quality Gate') {
+            steps {
+                script {
+                    timeout(time: 2, unit: 'MINUTES') {
+                        waitForQualityGate abortPipeline: true
+                    }
                 }
             }
         }
