@@ -33,7 +33,7 @@ pipeline {
                 script {
                     echo 'Running SonarQube analysis...'
                     withSonarQubeEnv(SONARQUBE_SERVER) {
-                        sh 'mvn sonar:sonar -Dsonar.projectKey=my-java-app -Dsonar.host.url=http://http://54.210.84.183:9000'
+                        sh 'mvn sonar:sonar -Dsonar.projectKey=my-java-app -Dsonar.host.url=http://54.210.84.183:9000'
                     }
                 }
             }
